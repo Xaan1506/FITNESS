@@ -2,6 +2,11 @@ import React from 'react'
 import { motion } from 'framer-motion'
 
 import FoodSearchScreen from './FoodSearchScreen'
+import Footer from "../components/Footer";
+
+// NEW IMPORTS
+import WorkoutServices from "../components/WorkoutServices";
+import ContactForm from "../components/ContactForm";
 
 const statHighlights = [
   { label: 'Members coached', value: '78K+' },
@@ -43,6 +48,8 @@ export default function Landing({openAuth}){
   return (
     <>
       <div className="landing">
+
+        {/* HERO SECTION */}
         <section className="hero">
           <motion.div
             className="hero-content card glassy"
@@ -102,6 +109,7 @@ export default function Landing({openAuth}){
           </motion.div>
         </section>
 
+        {/* EXPERIENCE SECTION */}
         <section className="experience">
           <div className="experience-card card glassy">
             <div>
@@ -147,6 +155,7 @@ export default function Landing({openAuth}){
           </div>
         </section>
 
+        {/* FEATURES GRID */}
         <section className="features-grid">
           {benefits.map(item => (
             <article key={item.title} className="feature card glassy">
@@ -157,6 +166,7 @@ export default function Landing({openAuth}){
           ))}
         </section>
 
+        {/* TESTIMONIAL */}
         <section className="testimonial card glassy">
           <div>
             <p className="eyebrow">Coach stories</p>
@@ -167,7 +177,18 @@ export default function Landing({openAuth}){
           </div>
           <button className="btn ghost contrast" onClick={openAuth}>Meet your plan</button>
         </section>
+
+        {/* ⭐ NEW WORKOUT SERVICES SECTION */}
+        <WorkoutServices />
+
+        {/* ⭐ NEW CONTACT FORM SECTION */}
+        <ContactForm />
+
+        {/* ⭐ NEW FOOTER SECTION */}
+        <Footer />
+
       </div>
+
       {searchOpen && <FoodSearchScreen onClose={()=>setSearchOpen(false)} />}
     </>
   )

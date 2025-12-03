@@ -18,7 +18,7 @@ function FavoriteButton({id, onToggle}){
   return <button className={'btn small ' + (fav ? '' : 'ghost')} onClick={toggle}>{fav ? '★' : '☆'}</button>
 }
 
-export default function FoodSearchScreen({onClose}){
+export default function FoodSearchScreen({onClose, onLogged}){
   const [query, setQuery] = useState('');
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -52,8 +52,18 @@ export default function FoodSearchScreen({onClose}){
   async function quickAdd(item){
     const scaled = scale(item);
     try{
-      await api.addFoodLog({name:item.name, calories:scaled.calories, protein:scaled.protein, carbs:scaled.carbs, fats:scaled.fats, fiber:scaled.fiber});
+      await api.addFoodLog({
+        name:item.name,
+        calories:scaled.calories,
+        protein:scaled.protein,
+        carbs:scaled.carbs,
+        fats:scaled.fats,
+        fiber:scaled.fiber,
+        portion: `${portion}${unitLabel}`,
+        vitamins: {category:item.category, foodId:item.id}
+      });
       setMsg('Added: ' + item.name);
+      onLogged && onLogged();
     }catch(e){ setMsg('Error: ' + e.message); }
   }
 

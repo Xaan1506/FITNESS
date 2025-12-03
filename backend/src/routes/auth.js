@@ -11,21 +11,36 @@ function signToken(user) {
 }
 
 router.post('/signup', async (req, res) => {
-  const {email, password, name} = req.body;
-  if (!email || !password) return res.status(400).json({error: 'email and password required'});
-  const hash = await bcrypt.hash(password, 10);
-  db.run('INSERT INTO users (name,email,password_hash) VALUES (?,?,?)', [name||null,email,hash], function(err) {
-    if (err) return res.status(400).json({error: err.message});
-    const user = {id: this.lastID, email, name};
-    const token = signToken(user);
-    res.json({user, token});
-  });
+  try{
+    const {email, password, name} = req.body;
+    if (!email || !password) return res.status(400).json({error: 'email and password required'});
+    const trimmedEmail = String(email).trim().toLowerCase();
+
+    db.get('SELECT id FROM users WHERE email = ?', [trimmedEmail], async (err, existing) => {
+      if (err) return res.status(500).json({error: 'database error'});
+      if (existing) return res.status(409).json({error: 'An account with that email already exists. Try logging in.'});
+      try{
+        const hash = await bcrypt.hash(password, 10);
+        db.run('INSERT INTO users (name,email,password_hash) VALUES (?,?,?)', [name||null,trimmedEmail,hash], function(runErr) {
+          if (runErr) return res.status(500).json({error: runErr.message});
+          const user = {id: this.lastID, email: trimmedEmail, name};
+          const token = signToken(user);
+          res.json({user, token});
+        });
+      }catch(hashErr){
+        res.status(500).json({error: 'Failed to create account'});
+      }
+    });
+  }catch(e){
+    res.status(500).json({error: 'unexpected error'});
+  }
 });
 
 router.post('/login', (req, res) => {
   const {email, password} = req.body;
   if (!email || !password) return res.status(400).json({error: 'email and password required'});
-  db.get('SELECT * FROM users WHERE email = ?', [email], async (err, row) => {
+  const normalizedEmail = String(email).trim().toLowerCase();
+  db.get('SELECT * FROM users WHERE email = ?', [normalizedEmail], async (err, row) => {
     if (err) return res.status(500).json({error: err.message});
     if (!row) return res.status(401).json({error: 'invalid credentials'});
     const ok = await bcrypt.compare(password, row.password_hash);

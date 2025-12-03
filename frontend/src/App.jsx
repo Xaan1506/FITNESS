@@ -27,6 +27,7 @@ export default function App(){
     setUser(user); 
     setToken(token);
     Api.setToken(token);
+    setAuthOpen(false);
   };
 
   const onPersonalized = (profile) => {

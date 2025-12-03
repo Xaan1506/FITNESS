@@ -1,4 +1,16 @@
-const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:4000';
+function inferApiBase(){
+  if (import.meta.env.VITE_API_BASE) return import.meta.env.VITE_API_BASE.replace(/\/$/, '');
+  if (typeof window !== 'undefined'){
+    const {protocol, hostname} = window.location;
+    if (hostname === 'localhost' || hostname === '127.0.0.1'){
+      return `${protocol}//${hostname}:4000`;
+    }
+    return window.location.origin;
+  }
+  return 'http://localhost:4000';
+}
+
+const API_BASE = inferApiBase();
 
 let _token = null;
 function setToken(t){ _token = t; }
@@ -10,7 +22,8 @@ async function request(path, opts={}){
   try{
     res = await fetch(API_BASE + path, {...opts, headers});
   }catch(e){
-    throw new Error('Network error: ' + e.message);
+    const hint = API_BASE.includes('localhost') ? 'Is the backend server running on port 4000?' : 'Check your network or API base URL.';
+    throw new Error(`Network error: ${e.message}. ${hint}`);
   }
   let data = null;
   const ct = res.headers.get('content-type') || '';
@@ -30,6 +43,7 @@ const api = {
   login: (body)=> request('/api/auth/login', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)}),
   personalize: (body)=> request('/api/user/personalize', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)}),
   getPlan: ()=> request('/api/user/plan'),
+  getMealsToday: ()=> request('/api/food/today'),
   searchFoods: async function(query, category, page=1, pageSize=50){
     const qp = new URLSearchParams();
     if (query) qp.set('query', query);

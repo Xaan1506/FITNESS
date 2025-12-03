@@ -30,18 +30,19 @@ async function request(path, options = {}) {
 }
 
 const api = {
-  // AUTH
-  signup: (body) =>
-    request("/auth/signup", {
-      method: "POST",
-      body: JSON.stringify(body),
-    }),
+// AUTH
+signup: (body) =>
+  request("/api/auth/signup", {
+    method: "POST",
+    body: JSON.stringify(body),
+  }),
 
-  login: (body) =>
-    request("/auth/login", {
-      method: "POST",
-      body: JSON.stringify(body),
-    }),
+login: (body) =>
+  request("/api/auth/login", {
+    method: "POST",
+    body: JSON.stringify(body),
+  }),
+
 
   // USER
   personalize: (body) =>

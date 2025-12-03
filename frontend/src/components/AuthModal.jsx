@@ -14,7 +14,7 @@ function LoginForm({onLogin}){
     setLoading(true);
     try{
       const res = await Api.login({email,password});
-      Api.setToken(res.token);
+      onLogin(res);
       onLogin(res);
     }catch(e){
       setErr(e.message || 'Unable to sign in');
@@ -66,7 +66,6 @@ function SignupForm({onLogin}){
     setLoading(true);
     try{
       const res = await Api.signup({name,email,password});
-      Api.setToken(res.token);
       onLogin(res);
     }catch(e){
       setErr(e.message || 'Unable to create account');

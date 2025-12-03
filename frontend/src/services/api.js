@@ -47,16 +47,17 @@ const api = {
 
   // AUTH -----------------------------
   signup: (body) =>
-    request("auth/signup", {
-      method: "POST",
-      body: JSON.stringify(body),
-    }),
+  request("auth/signup", {
+    method: "POST",
+    body: JSON.stringify(body),
+  }),
 
-  login: (body) =>
-    request("auth/login", {
-      method: "POST",
-      body: JSON.stringify(body),
-    }),
+login: (body) =>
+  request("auth/login", {
+    method: "POST",
+    body: JSON.stringify(body),
+  }),
+
 
   // USER -----------------------------
   personalize: (body) =>

@@ -8,13 +8,13 @@ import Api from './services/api';
 import Navbar from './components/Navbar';
 import Workouts from "./pages/Workouts";
 
-
 export default function App() {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
   const [showPersonalize, setShowPersonalize] = useState(false);
   const [dark, setDark] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
+  const [route, setRoute] = useState(window.location.pathname);
 
   // Load auth from localStorage on startup
   useEffect(() => {
@@ -34,7 +34,20 @@ export default function App() {
     }
   }, []);
 
-  // 🔥 FIXED LOGIN HANDLER — Now matches login/signup response
+  // Listen for URL changes (for clicking nav links)
+  useEffect(() => {
+    const handler = () => setRoute(window.location.pathname);
+    window.addEventListener("popstate", handler);
+    return () => window.removeEventListener("popstate", handler);
+  }, []);
+
+  // Custom push navigation
+  function navigate(path) {
+    window.history.pushState({}, "", path);
+    setRoute(path);
+  }
+
+  // LOGIN — standardized for backend response
   function onLogin(res) {
     const { user, token } = res;
 
@@ -49,13 +62,14 @@ export default function App() {
     setAuthOpen(false);
   }
 
-  // Logout function
+  // LOGOUT
   function onLogout() {
     setUser(null);
     setToken(null);
     Api.setToken(null);
     localStorage.removeItem("ft_token");
     localStorage.removeItem("ft_user");
+    navigate("/");
   }
 
   function onPersonalized() {
@@ -67,27 +81,27 @@ export default function App() {
       <Navbar 
         user={user} 
         onOpenAuth={() => setAuthOpen(true)} 
-        onLogout={onLogout} 
+        onLogout={onLogout}
+        onNavigate={navigate}   // ⭐ added navigation support
       />
 
       <main>
-  {!user ? (
-    <Landing openAuth={() => setAuthOpen(true)} />
-  ) : (
-    <>
-      {window.location.pathname === "/workouts" ? (
-        <Workouts />
-      ) : (
-        <Dashboard
-          user={user}
-          token={token}
-          openPersonalize={() => setShowPersonalize(true)}
-        />
-      )}
-    </>
-  )}
-</main>
-
+        {!user ? (
+          <Landing openAuth={() => setAuthOpen(true)} />
+        ) : (
+          <>
+            {route === "/workouts" ? (
+              <Workouts />
+            ) : (
+              <Dashboard
+                user={user}
+                token={token}
+                openPersonalize={() => setShowPersonalize(true)}
+              />
+            )}
+          </>
+        )}
+      </main>
 
       {showPersonalize && (
         <PersonalizeModal

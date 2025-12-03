@@ -2,7 +2,7 @@
 
 // Always read backend URL from .env
 const BASE_URL =
- import.meta.env.VITE_API_URL || "https://fitness-nlyp.onrender.com/api";
+  import.meta.env.VITE_API_URL || "https://fitness-nlyp.onrender.com/api";
 console.log("Backend URL →", BASE_URL);
 
 let authToken = localStorage.getItem("ft_token") || null;

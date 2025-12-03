@@ -30,7 +30,6 @@ app.use('/api/foods', foodsRoutes);
 app.get('/', (req, res) => {
   res.json({status: 'FitTrack API', time: Date.now()});
 });
-const path = require("path");
 
 // Serve the built frontend
 app.use(express.static(path.join(__dirname, "../frontend/dist")));

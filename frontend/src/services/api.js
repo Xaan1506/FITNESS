@@ -1,36 +1,31 @@
 // frontend/src/services/api.js
 
-// Always read backend URL from .env (Render adds this automatically)
-const BASE_URL =
-  import.meta.env.VITE_API_URL || "https://fitness-nlyp.onrender.com/api";
+// Always read backend URL from .env
+let BASE_URL = import.meta.env.VITE_API_URL || "https://fitness-nlyp.onrender.com/api";
+
+// Guarantee trailing slash (VERY IMPORTANT)
+if (!BASE_URL.endsWith("/")) {
+  BASE_URL = BASE_URL + "/";
+}
 
 console.log("Backend URL →", BASE_URL);
 
-// Load token from storage
 let authToken = localStorage.getItem("ft_token") || null;
 
-// -----------------------------
-// SAVE TOKEN FOR ALL REQUESTS
-// -----------------------------
+// Save token for all requests
 function setToken(t) {
   authToken = t;
-  if (t) {
-    localStorage.setItem("ft_token", t);
-  } else {
-    localStorage.removeItem("ft_token");
-  }
+  if (t) localStorage.setItem("ft_token", t);
+  else localStorage.removeItem("ft_token");
 }
 
-// -----------------------------
-// GENERIC REQUEST WRAPPER
-// -----------------------------
+// Generic request wrapper
 async function request(path, options = {}) {
   const headers = {
     "Content-Type": "application/json",
     ...(options.headers || {}),
   };
 
-  // Include auth token if logged in
   if (authToken) {
     headers.Authorization = `Bearer ${authToken}`;
   }
@@ -41,59 +36,49 @@ async function request(path, options = {}) {
   });
 
   if (!res.ok) {
-    const err = await res.text();
-    throw new Error(err || "Request failed");
+    const text = await res.text();
+    throw new Error(text || "Request failed");
   }
 
   return res.json();
 }
 
-// -----------------------------
-// API METHODS
-// -----------------------------
+// API methods
 const api = {
   setToken,
 
-  // -------------------------
-  // AUTH
-  // -------------------------
+  // AUTH ---------------------------
   signup: (body) =>
-    request("/auth/signup", {
+    request("auth/signup", {
       method: "POST",
       body: JSON.stringify(body),
     }),
 
   login: (body) =>
-    request("/auth/login", {
+    request("auth/login", {
       method: "POST",
       body: JSON.stringify(body),
     }),
 
-  // -------------------------
-  // USER
-  // -------------------------
+  // USER ---------------------------
   personalize: (body) =>
-    request("/user/personalize", {
+    request("user/personalize", {
       method: "POST",
       body: JSON.stringify(body),
     }),
 
-  getPlan: () => request("/user/plan"),
+  getPlan: () => request("user/plan"),
 
-  // -------------------------
-  // MEALS
-  // -------------------------
-  getMealsToday: () => request("/food/today"),
+  // MEALS --------------------------
+  getMealsToday: () => request("food/today"),
 
   addFoodLog: (body) =>
-    request("/food/add", {
+    request("food/add", {
       method: "POST",
       body: JSON.stringify(body),
     }),
 
-  // -------------------------
-  // FOOD SEARCH
-  // -------------------------
+  // FOOD SEARCH --------------------
   searchFoods(query, category = null, page = 1, pageSize = 50) {
     const qp = new URLSearchParams();
     if (query) qp.set("query", query);
@@ -101,7 +86,7 @@ const api = {
     qp.set("page", page);
     qp.set("pageSize", pageSize);
 
-    return request("/foods?" + qp.toString());
+    return request("foods?" + qp.toString());
   },
 };
 

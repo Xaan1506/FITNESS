@@ -22,7 +22,7 @@ export default function Navbar({ user, onOpenAuth, onLogout }) {
             </button>
           </>
         ) : (
-          <button className="btn" onClick={onOpenAuth}>Sign In</button>
+          <button className="btn" onClick={onOpenAuth}>Login</button>
         )}
       </nav>
     </header>

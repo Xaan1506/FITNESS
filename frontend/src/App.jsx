@@ -6,6 +6,8 @@ import Landing from './pages/Landing';
 import AuthModal from './components/AuthModal';
 import Api from './services/api';
 import Navbar from './components/Navbar';
+import Workouts from "./pages/Workouts";
+
 
 export default function App() {
   const [user, setUser] = useState(null);
@@ -69,16 +71,23 @@ export default function App() {
       />
 
       <main>
-        {user ? (
-          <Dashboard 
-            user={user} 
-            token={token} 
-            openPersonalize={() => setShowPersonalize(true)} 
-          />
-        ) : (
-          <Landing openAuth={() => setAuthOpen(true)} />
-        )}
-      </main>
+  {!user ? (
+    <Landing openAuth={() => setAuthOpen(true)} />
+  ) : (
+    <>
+      {window.location.pathname === "/workouts" ? (
+        <Workouts />
+      ) : (
+        <Dashboard
+          user={user}
+          token={token}
+          openPersonalize={() => setShowPersonalize(true)}
+        />
+      )}
+    </>
+  )}
+</main>
+
 
       {showPersonalize && (
         <PersonalizeModal

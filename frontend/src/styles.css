@@ -949,3 +949,35 @@ input, select, textarea{
   flex: 1;
   margin-left: 12px;
 }
+.workouts-page {
+  padding: 2rem 0;
+}
+
+.workouts-header {
+  margin-bottom: 2rem;
+}
+
+.workout-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1.5rem;
+}
+
+.workout-card {
+  padding: 1.5rem;
+  text-align: left;
+}
+
+.w-icon {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+  opacity: 0.7;
+}
+
+.workout-meta {
+  display: flex;
+  justify-content: space-between;
+  margin: 1rem 0;
+  font-size: 0.9rem;
+  opacity: 0.8;
+}

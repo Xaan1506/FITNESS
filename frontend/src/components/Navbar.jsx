@@ -14,7 +14,7 @@ export default function Navbar({ user, onOpenAuth, onLogout }) {
 
         {user ? (
           <>
-            <a href="/#workouts">Workouts</a>
+            <a href="/workouts">Workouts</a>
             <a href="/#runs">Runs</a>
 
             <button className="btn-link" onClick={onLogout}>

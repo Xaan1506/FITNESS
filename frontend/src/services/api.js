@@ -1,10 +1,12 @@
 // frontend/src/services/api.js
 
-// Always read backend URL from .env
+// Always read backend URL from .env (Render adds this automatically)
 const BASE_URL =
   import.meta.env.VITE_API_URL || "https://fitness-nlyp.onrender.com/api";
+
 console.log("Backend URL →", BASE_URL);
 
+// Load token from storage
 let authToken = localStorage.getItem("ft_token") || null;
 
 // -----------------------------
@@ -28,6 +30,7 @@ async function request(path, options = {}) {
     ...(options.headers || {}),
   };
 
+  // Include auth token if logged in
   if (authToken) {
     headers.Authorization = `Bearer ${authToken}`;
   }
@@ -51,7 +54,9 @@ async function request(path, options = {}) {
 const api = {
   setToken,
 
+  // -------------------------
   // AUTH
+  // -------------------------
   signup: (body) =>
     request("/auth/signup", {
       method: "POST",
@@ -64,7 +69,9 @@ const api = {
       body: JSON.stringify(body),
     }),
 
+  // -------------------------
   // USER
+  // -------------------------
   personalize: (body) =>
     request("/user/personalize", {
       method: "POST",
@@ -73,7 +80,9 @@ const api = {
 
   getPlan: () => request("/user/plan"),
 
+  // -------------------------
   // MEALS
+  // -------------------------
   getMealsToday: () => request("/food/today"),
 
   addFoodLog: (body) =>
@@ -82,7 +91,9 @@ const api = {
       body: JSON.stringify(body),
     }),
 
+  // -------------------------
   // FOOD SEARCH
+  // -------------------------
   searchFoods(query, category = null, page = 1, pageSize = 50) {
     const qp = new URLSearchParams();
     if (query) qp.set("query", query);

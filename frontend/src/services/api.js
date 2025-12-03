@@ -1,9 +1,9 @@
 // frontend/src/services/api.js
 
-// Always read backend URL from .env
+// Read backend URL from .env or fallback
 let BASE_URL = import.meta.env.VITE_API_URL || "https://fitness-nlyp.onrender.com/api";
 
-// Guarantee trailing slash (VERY IMPORTANT)
+// Ensure trailing slash
 if (!BASE_URL.endsWith("/")) {
   BASE_URL = BASE_URL + "/";
 }
@@ -12,7 +12,7 @@ console.log("Backend URL →", BASE_URL);
 
 let authToken = localStorage.getItem("ft_token") || null;
 
-// Save token for all requests
+// Save token
 function setToken(t) {
   authToken = t;
   if (t) localStorage.setItem("ft_token", t);
@@ -26,9 +26,7 @@ async function request(path, options = {}) {
     ...(options.headers || {}),
   };
 
-  if (authToken) {
-    headers.Authorization = `Bearer ${authToken}`;
-  }
+  if (authToken) headers.Authorization = `Bearer ${authToken}`;
 
   const res = await fetch(BASE_URL + path, {
     ...options,
@@ -36,18 +34,18 @@ async function request(path, options = {}) {
   });
 
   if (!res.ok) {
-    const text = await res.text();
-    throw new Error(text || "Request failed");
+    const error = await res.text();
+    throw new Error(error || "Request failed");
   }
 
   return res.json();
 }
 
-// API methods
+// API endpoints
 const api = {
   setToken,
 
-  // AUTH ---------------------------
+  // AUTH -----------------------------
   signup: (body) =>
     request("auth/signup", {
       method: "POST",
@@ -60,7 +58,7 @@ const api = {
       body: JSON.stringify(body),
     }),
 
-  // USER ---------------------------
+  // USER -----------------------------
   personalize: (body) =>
     request("user/personalize", {
       method: "POST",
@@ -69,7 +67,7 @@ const api = {
 
   getPlan: () => request("user/plan"),
 
-  // MEALS --------------------------
+  // MEALS ----------------------------
   getMealsToday: () => request("food/today"),
 
   addFoodLog: (body) =>
@@ -78,7 +76,7 @@ const api = {
       body: JSON.stringify(body),
     }),
 
-  // FOOD SEARCH --------------------
+  // FOOD SEARCH ----------------------
   searchFoods(query, category = null, page = 1, pageSize = 50) {
     const qp = new URLSearchParams();
     if (query) qp.set("query", query);

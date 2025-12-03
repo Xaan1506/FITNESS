@@ -1,9 +1,11 @@
+// frontend/src/App.jsx  (replace contents with this or patch in)
 import React, {useState, useEffect} from 'react'
 import Dashboard from './pages/Dashboard'
 import PersonalizeModal from './components/PersonalizeModal'
 import Landing from './pages/Landing'
 import AuthModal from './components/AuthModal'
 import Api from './services/api'
+import Navbar from './components/Navbar'
 
 export default function App(){
   const [user, setUser] = useState(null);
@@ -11,75 +13,62 @@ export default function App(){
   const [showPersonalize, setShowPersonalize] = useState(false);
   const [dark, setDark] = useState(false);
   const [mobilePreview, setMobilePreview] = useState(true);
-
-  // ✅ You forgot these:
   const [authOpen, setAuthOpen] = useState(false);
 
-  useEffect(()=>{
-    if (token) {
-      // after login/signup, show personalization after 3s
-      const t = setTimeout(()=> setShowPersonalize(true), 3000);
-      return () => clearTimeout(t);
+  // Hydrate from localStorage on mount
+  useEffect(() => {
+    try {
+      const storedToken = localStorage.getItem('ft_token');
+      const storedUser = localStorage.getItem('ft_user');
+      if (storedToken) {
+        Api.setToken(storedToken); // ensures API sends Authorization header
+        setToken(storedToken);
+      }
+      if (storedUser) {
+        setUser(JSON.parse(storedUser));
+      }
+    } catch (e) {
+      console.warn('Failed to hydrate auth', e);
     }
-  }, [token]);
+  }, []);
 
-  const onLogin = ({user, token}) => {
-    setUser(user); 
-    setToken(token);
-    Api.setToken(token);
+  // Called by AuthModal after successful login
+  function onLogin(userObj, tokenStr){
+    setUser(userObj);
+    setToken(tokenStr);
+    Api.setToken(tokenStr);
+    localStorage.setItem('ft_token', tokenStr);
+    localStorage.setItem('ft_user', JSON.stringify(userObj));
     setAuthOpen(false);
-  };
+  }
 
-  const onPersonalized = (profile) => {
-    setUser(prev => ({...prev, profile}));
+  function onLogout(){
+    setUser(null);
+    setToken(null);
+    Api.setToken(null);
+    localStorage.removeItem('ft_token');
+    localStorage.removeItem('ft_user');
+  }
+
+  function onPersonalized() {
     setShowPersonalize(false);
-  };
+    // reload dashboard / user data if necessary
+  }
 
   return (
-    <div className={dark ? 'app dark' : 'app'}>
-      <header className="topbar">
-        <h1>FitTrack</h1>
-        <div>
-          <button onClick={()=>setDark(d=>!d)} className="btn small">Toggle Theme</button>
-          <button onClick={()=>setMobilePreview(m=>!m)} className="btn small ghost" style={{marginLeft:8}}>
-            {mobilePreview ? 'Desktop View' : 'Mobile Preview'}
-          </button>
+    <div className={dark ? 'theme-dark' : ''}>
+      <Navbar user={user} onOpenAuth={()=>setAuthOpen(true)} onLogout={onLogout} />
 
-          {!token && (
-            <button 
-              className="btn ghost" 
-              onClick={()=>setAuthOpen(true)} 
-              style={{marginLeft:10}}
-            >
-              Login / Sign up
-            </button>
-          )}
-        </div>
-      </header>
+      {/* simple routing (existing app used Landing/Dashboard) */}
+      <main>
+        {user ? (
+          <Dashboard user={user} token={token} openPersonalize={()=>setShowPersonalize(true)} />
+        ) : (
+          <Landing openAuth={()=>setAuthOpen(true)} />
+        )}
+      </main>
 
-      {mobilePreview ? (
-        <div className="device-shell">
-          <div className="device-frame card">
-            <main className="mobile-root">
-              {!token ? (
-                <Landing openAuth={() => setAuthOpen(true)} />
-              ) : (
-                <Dashboard user={user} token={token} />
-              )}
-            </main>
-          </div>
-        </div>
-      ) : (
-        <main>
-          {!token ? (
-            <Landing openAuth={() => setAuthOpen(true)} />
-          ) : (
-            <Dashboard user={user} token={token} />
-          )}
-        </main>
-      )}
-
-      {showPersonalize && token && (
+      {showPersonalize && (
         <PersonalizeModal 
           onClose={()=>setShowPersonalize(false)} 
           onSaved={onPersonalized} 

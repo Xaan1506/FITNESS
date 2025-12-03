@@ -30,6 +30,14 @@ app.use('/api/foods', foodsRoutes);
 app.get('/', (req, res) => {
   res.json({status: 'FitTrack API', time: Date.now()});
 });
+const path = require("path");
+
+// Serve the built frontend
+app.use(express.static(path.join(__dirname, "../frontend/dist")));
+
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "../frontend/dist/index.html"));
+});
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);

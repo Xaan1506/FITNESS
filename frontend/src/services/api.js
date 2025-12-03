@@ -1,59 +1,77 @@
-function inferApiBase(){
-  if (import.meta.env.VITE_API_BASE) return import.meta.env.VITE_API_BASE.replace(/\/$/, '');
-  if (typeof window !== 'undefined'){
-    const {protocol, hostname} = window.location;
-    if (hostname === 'localhost' || hostname === '127.0.0.1'){
-      return `${protocol}//${hostname}:4000`;
-    }
-    return window.location.origin;
-  }
-  return 'http://localhost:4000';
-}
+// Always read backend URL from .env
+const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
 
-const API_BASE = inferApiBase();
+console.log("Backend URL →", BASE_URL);
 
-let _token = null;
-function setToken(t){ _token = t; }
+// Generic request helper
+async function request(path, options = {}) {
+  const token = localStorage.getItem("token");
 
-async function request(path, opts={}){
-  const headers = opts.headers || {};
-  if (_token) headers['Authorization'] = 'Bearer ' + _token;
-  let res;
-  try{
-    res = await fetch(API_BASE + path, {...opts, headers});
-  }catch(e){
-    const hint = API_BASE.includes('localhost') ? 'Is the backend server running on port 4000?' : 'Check your network or API base URL.';
-    throw new Error(`Network error: ${e.message}. ${hint}`);
+  const headers = {
+    "Content-Type": "application/json",
+    ...(options.headers || {}),
+  };
+
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
   }
-  let data = null;
-  const ct = res.headers.get('content-type') || '';
-  if (ct.includes('application/json')){
-    data = await res.json();
-  } else {
-    const text = await res.text();
-    try{ data = JSON.parse(text); }catch(e){ data = {raw: text}; }
+
+  const res = await fetch(BASE_URL + path, {
+    ...options,
+    headers,
+  });
+
+  if (!res.ok) {
+    const error = await res.text();
+    throw new Error(error || "Request failed");
   }
-  if (!res.ok) throw new Error((data && data.error) ? data.error : ('API error: ' + (data && data.raw ? data.raw : res.status)));
-  return data;
+
+  return res.json();
 }
 
 const api = {
-  setToken,
-  signup: (body)=> request('/api/auth/signup', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)}),
-  login: (body)=> request('/api/auth/login', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)}),
-  personalize: (body)=> request('/api/user/personalize', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)}),
-  getPlan: ()=> request('/api/user/plan'),
-  getMealsToday: ()=> request('/api/food/today'),
-  searchFoods: async function(query, category, page=1, pageSize=50){
+  // AUTH
+  signup: (body) =>
+    request("/auth/signup", {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
+
+  login: (body) =>
+    request("/auth/login", {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
+
+  // USER
+  personalize: (body) =>
+    request("/user/personalize", {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
+
+  getPlan: () => request("/user/plan"),
+
+  // MEALS
+  getMealsToday: () => request("/food/today"),
+
+  addFoodLog: (body) =>
+    request("/food/add", {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
+
+  // FOOD SEARCH
+  searchFoods(query, category = null, page = 1, pageSize = 50) {
     const qp = new URLSearchParams();
-    if (query) qp.set('query', query);
-    if (category) qp.set('category', category);
-    qp.set('page', String(page)); qp.set('pageSize', String(pageSize));
-    return request('/api/foods?' + qp.toString());
+    if (query) qp.set("query", query);
+    if (category) qp.set("category", category);
+    qp.set("page", String(page));
+    qp.set("pageSize", String(pageSize));
+
+    return request("/foods?" + qp.toString());
   },
-  addFoodLog: async function(body){
-    return request('/api/food/add', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)});
-  }
 };
 
 export default api;
+

@@ -1,9 +1,9 @@
 // frontend/src/services/api.js
 
-// Read backend URL from .env or fallback
-let BASE_URL = import.meta.env.VITE_API_URL || "https://fitness-nlyp.onrender.com/api";
+// Read backend URL from .env or fallback (make sure your VITE_API_URL includes /api)
+let BASE_URL = import.meta.env.VITE_API_URL || "https://fitness-1-3u07.onrender.com/api";
 
-// Ensure trailing slash
+// Ensure trailing slash so we can safely append paths like "auth/login"
 if (!BASE_URL.endsWith("/")) {
   BASE_URL = BASE_URL + "/";
 }
@@ -17,6 +17,17 @@ function setToken(t) {
   authToken = t;
   if (t) localStorage.setItem("ft_token", t);
   else localStorage.removeItem("ft_token");
+}
+
+// Helper: parse response safely (handles empty 204 responses)
+async function parseResponse(res) {
+  const contentType = res.headers.get("content-type") || "";
+  if (res.status === 204) return null; // No Content
+  if (contentType.includes("application/json")) {
+    return res.json();
+  }
+  // Fallback to text
+  return res.text();
 }
 
 // Generic request wrapper
@@ -33,12 +44,28 @@ async function request(path, options = {}) {
     headers,
   });
 
+  const parsed = await parseResponse(res);
+
   if (!res.ok) {
-    const error = await res.text();
-    throw new Error(error || "Request failed");
+    // Try to extract meaningful message from parsed body (json or text)
+    let message = "Request failed";
+    try {
+      if (parsed) {
+        if (typeof parsed === "string") message = parsed;
+        else if (parsed.error) message = parsed.error;
+        else if (parsed.message) message = parsed.message;
+        else message = JSON.stringify(parsed);
+      }
+    } catch (e) {
+      message = "Request failed (unable to parse error)";
+    }
+    const err = new Error(message);
+    err.status = res.status;
+    err.body = parsed;
+    throw err;
   }
 
-  return res.json();
+  return parsed;
 }
 
 // API endpoints
@@ -47,17 +74,16 @@ const api = {
 
   // AUTH -----------------------------
   signup: (body) =>
-  request("auth/signup", {
-    method: "POST",
-    body: JSON.stringify(body),
-  }),
+    request("auth/signup", {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
 
-login: (body) =>
-  request("auth/login", {
-    method: "POST",
-    body: JSON.stringify(body),
-  }),
-
+  login: (body) =>
+    request("auth/login", {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
 
   // USER -----------------------------
   personalize: (body) =>
